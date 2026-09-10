@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+pki/
+salida/
+datos/
+*.db
+.env

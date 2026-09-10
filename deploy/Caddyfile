@@ -1,0 +1,12 @@
+# /etc/caddy/Caddyfile  — HTTPS automático con Let's Encrypt
+# Reemplazá el dominio. El puerto 80 y 443 tienen que estar abiertos en el firewall.
+verificar.tudominio.com.ar {
+    encode gzip
+    reverse_proxy 127.0.0.1:8000
+    request_body {
+        max_size 25MB
+    }
+    log {
+        output file /var/log/caddy/confianza.log
+    }
+}

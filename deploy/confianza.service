@@ -1,0 +1,21 @@
+# /etc/systemd/system/confianza.service
+[Unit]
+Description=Estudio de Confianza - portal de firma y verificación
+After=network.target
+
+[Service]
+User=confianza
+Group=confianza
+WorkingDirectory=/opt/confianza
+EnvironmentFile=/opt/confianza/.env
+ExecStart=/opt/confianza/.venv/bin/uvicorn confianza.api:app --host 127.0.0.1 --port 8000 --workers 2
+Restart=always
+RestartSec=3
+# Endurecimiento básico
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/confianza/datos /opt/confianza/salida
+
+[Install]
+WantedBy=multi-user.target
