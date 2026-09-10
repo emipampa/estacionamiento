@@ -45,15 +45,27 @@ Validación independiente con la CLI oficial de pyHanko:
 
 ## Despliegue en el VPS
 
-En un VPS Debian/Ubuntu limpio, con un dominio apuntando a la IP y los puertos 80 y 443 abiertos:
+Primero un chequeo de sólo lectura, para ver qué hay corriendo y que nada choque:
 
 ```bash
-bash deploy/instalar_vps.sh https://github.com/emipampa/estacionamiento.git verificar.tudominio.com.ar
+curl -fsSL https://raw.githubusercontent.com/emipampa/estacionamiento/RAMA/deploy/chequear_vps.sh | bash
 ```
 
-El script instala Python y Caddy, clona el repo en `/opt/confianza`, crea el usuario de
-servicio, genera `.env` y la PKI, y deja el portal como servicio systemd detrás de Caddy
-con HTTPS automático. Archivos: `deploy/confianza.service`, `deploy/Caddyfile`, `deploy/env.ejemplo`.
+Después, con un dominio apuntando a la IP y los puertos 80 y 443 abiertos:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/emipampa/estacionamiento/RAMA/deploy/instalar_vps.sh \
+  | bash -s -- https://github.com/emipampa/estacionamiento.git verificar.tudominio.com.ar RAMA
+```
+
+El instalador instala Python y Caddy, clona el repo en `/opt/confianza`, crea el usuario de
+servicio, genera `.env` y la PKI, y deja el portal como servicio systemd detrás de Caddy con
+HTTPS automático. Está pensado para no romper nada existente: se detiene si nginx o apache ya
+usan el 80/443, no pisa un Caddyfile existente (agrega el sitio en `/etc/caddy/sites/`), hace
+copia de seguridad de lo que modifica y valida Caddy antes de recargarlo. Si el puerto 8000
+está ocupado, correrlo con `PUERTO=8010` (u otro).
+
+Archivos: `deploy/confianza.service`, `deploy/Caddyfile`, `deploy/env.ejemplo`.
 
 Importante: `BASE_URL` en `.env` tiene que ser la URL pública final **antes** de generar la PKI,
 porque queda impresa en los certificados (puntos de distribución de CRL) y en los QR.
