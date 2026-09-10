@@ -76,7 +76,7 @@ class OpcionesFirma:
     campo: str
     razon: str
     pagina: int = 0
-    caja: tuple[int, int, int, int] = (330, 60, 560, 120)  # puntos PDF, desde abajo-izquierda
+    caja: tuple[int, int, int, int] = (330, 140, 560, 200)  # puntos PDF, desde abajo-izquierda
     ltv: bool = True
     lta: bool = False
     con_tsa: bool = True
@@ -115,7 +115,7 @@ def firmar_documento(pdf: bytes, usuario_p12: Path, razon_usuario: str, con_tsa:
     paso1 = firmar(
         pdf,
         usuario,
-        OpcionesFirma(campo="FirmaUsuario", razon=razon_usuario, caja=(60, 60, 290, 120),
+        OpcionesFirma(campo="FirmaUsuario", razon=razon_usuario, caja=(60, 140, 290, 200),
                       ltv=con_tsa, con_tsa=con_tsa),
     )
     sello = cargar_firmante(config.SELLO_P12)
@@ -123,6 +123,6 @@ def firmar_documento(pdf: bytes, usuario_p12: Path, razon_usuario: str, con_tsa:
         paso1,
         sello,
         OpcionesFirma(campo="SelloPlataforma", razon=f"Validado por {config.NOMBRE_PLATAFORMA}",
-                      caja=(330, 60, 560, 120), ltv=con_tsa, lta=con_tsa, con_tsa=con_tsa),
+                      caja=(330, 140, 560, 200), ltv=con_tsa, lta=con_tsa, con_tsa=con_tsa),
     )
     return paso2
