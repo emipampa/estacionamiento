@@ -1,0 +1,61 @@
+name: VPS instalar / actualizar
+
+# Ejecuta deploy/instalar_vps.sh en el VPS. Se detiene solo si algo ya usa los puertos 80/443
+# (nginx/apache) o el puerto elegido, y hace copia de seguridad de lo que modifica.
+# Mismos secrets que "VPS chequeo".
+on:
+  workflow_dispatch:
+    inputs:
+      dominio:
+        description: "Dominio público del portal (tiene que apuntar a la IP del VPS)"
+        required: true
+      puerto:
+        description: "Puerto interno del servicio"
+        required: false
+        default: "8000"
+      rama:
+        description: "Rama del repo a desplegar"
+        required: false
+        default: "claude/pdf-signature-certificate-uczrjw"
+
+jobs:
+  instalar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.rama }}
+      - name: Preparar SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          sudo apt-get install -y -qq sshpass >/dev/null
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          if [ -n "$VPS_SSH_KEY" ]; then printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_vps; chmod 600 ~/.ssh/id_vps; fi
+      - name: Instalar en el VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          SSHPASS: ${{ secrets.VPS_PASSWORD }}
+          DOMINIO: ${{ inputs.dominio }}
+          PUERTO: ${{ inputs.puerto }}
+          RAMA: ${{ inputs.rama }}
+        run: |
+          OPTS="-o StrictHostKeyChecking=accept-new -o ConnectTimeout=20 -p ${VPS_PORT:-22}"
+          REPO="https://github.com/${GITHUB_REPOSITORY}.git"
+          CMD="PUERTO=$PUERTO bash -s -- $REPO $DOMINIO $RAMA"
+          if [ -f ~/.ssh/id_vps ]; then
+            ssh $OPTS -i ~/.ssh/id_vps "$VPS_USER@$VPS_HOST" "$CMD" < deploy/instalar_vps.sh
+          else
+            sshpass -e ssh $OPTS "$VPS_USER@$VPS_HOST" "$CMD" < deploy/instalar_vps.sh
+          fi
+      - name: Comprobar desde afuera
+        env:
+          DOMINIO: ${{ inputs.dominio }}
+        run: |
+          for i in $(seq 1 12); do
+            if curl -fsS --max-time 10 "https://$DOMINIO/salud"; then echo; echo "Portal respondiendo en https://$DOMINIO"; exit 0; fi
+            echo "esperando certificado HTTPS... ($i)"; sleep 10
+          done
+          echo "El servicio está instalado pero https://$DOMINIO todavía no responde (DNS o certificado)."; exit 1

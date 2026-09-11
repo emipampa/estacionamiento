@@ -118,3 +118,11 @@ Con la PKI propia, las firmas de usuarios son *firma electrónica* según la Ley
 *firma digital*: valen, pero la carga de la prueba es de la plataforma; por eso importan
 el registro, el sello de tiempo y la evidencia. Para operar formalmente mirar la figura de
 Prestador de Servicios de Confianza (Decreto 182/2019) y consultar con un abogado.
+
+## Despliegue desde GitHub Actions
+
+Si no podés o no querés entrar por SSH a mano, hay dos workflows manuales en `.github/workflows/`:
+**VPS chequeo (solo lectura)** y **VPS instalar / actualizar**. Necesitan estos secrets del
+repositorio (Settings > Secrets and variables > Actions): `VPS_HOST`, `VPS_PORT`, `VPS_USER` y
+`VPS_PASSWORD`, o `VPS_SSH_KEY` con una clave privada en lugar de la contraseña. Los secrets
+nunca aparecen en los logs.
